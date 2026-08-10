@@ -95,19 +95,20 @@ export function TurnPanel({
           </label>
         )}
 
-        <button className="primary-button" disabled={!canAddSelectedCard}>
-          Add card
-        </button>
+        <div className="turn-actions">
+          <button className="primary-button" disabled={!canAddSelectedCard}>
+            Add card
+          </button>
+          <button
+            className="danger-button"
+            type="button"
+            disabled={isRoundComplete || isResolvingFlipThree}
+            onClick={onQuitRound}
+          >
+            Quit round
+          </button>
+        </div>
       </form>
-
-      <button
-        className="danger-button"
-        type="button"
-        disabled={isRoundComplete || isResolvingFlipThree}
-        onClick={onQuitRound}
-      >
-        Quit round
-      </button>
     </section>
   )
 }

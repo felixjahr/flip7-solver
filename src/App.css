@@ -1,4 +1,9 @@
 .app-shell {
+  --panel-padding: 28px;
+  --section-gap: 18px;
+  --control-height: 44px;
+  --control-radius: 6px;
+
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 48px 0;
@@ -16,7 +21,7 @@
 .setup-panel {
   max-width: 860px;
   margin: 0 auto;
-  padding: 32px;
+  padding: var(--panel-padding);
 }
 
 .section-heading {
@@ -25,11 +30,12 @@
 
 .section-heading p {
   max-width: 620px;
+  margin-top: 12px;
 }
 
 .eyebrow,
 .turn-label,
-.player-card-header span {
+.player-seat-label {
   display: block;
   margin-bottom: 6px;
   color: var(--muted);
@@ -41,7 +47,7 @@
 
 .setup-form {
   display: grid;
-  gap: 24px;
+  gap: 22px;
   margin-top: 30px;
 }
 
@@ -57,10 +63,10 @@
 .field input,
 .field select {
   width: 100%;
-  min-height: 44px;
+  height: var(--control-height);
   box-sizing: border-box;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--control-radius);
   padding: 10px 12px;
   color: var(--text-h);
   background: var(--input-bg);
@@ -83,13 +89,15 @@
 .primary-button,
 .secondary-button,
 .danger-button {
-  min-height: 44px;
-  border-radius: 6px;
+  width: 128px;
+  height: var(--control-height);
+  border-radius: var(--control-radius);
   border: 1px solid transparent;
-  padding: 10px 16px;
+  padding: 0 14px;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+  line-height: 1;
 }
 
 .primary-button {
@@ -129,25 +137,26 @@
 
 .game-header {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-between;
   gap: 20px;
-  padding: 28px;
+  padding: var(--panel-padding);
 }
 
 .header-actions {
   display: flex;
   flex: 0 0 auto;
   gap: 10px;
+  align-items: flex-start;
 }
 
 .turn-panel {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.5fr) auto;
-  gap: 24px;
+  grid-template-columns: minmax(220px, 1fr) minmax(430px, 2fr);
+  gap: 20px;
   align-items: end;
-  margin-top: 20px;
-  padding: 28px;
+  margin-top: var(--section-gap);
+  padding: var(--panel-padding);
   text-align: left;
 }
 
@@ -156,7 +165,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-  margin-top: 20px;
+  margin-top: var(--section-gap);
   text-align: left;
 }
 
@@ -165,7 +174,7 @@
   min-height: 72px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 15px 16px;
   background: var(--surface);
 }
 
@@ -196,7 +205,7 @@
 
 .card-entry {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(160px, 1fr) auto;
   gap: 12px;
   align-items: end;
 }
@@ -205,18 +214,24 @@
   grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) auto;
 }
 
+.turn-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
 .players-board {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--section-gap);
+  margin-top: var(--section-gap);
 }
 
 .player-card {
-  min-height: 150px;
+  min-height: 156px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 18px;
+  padding: 18px 18px 20px;
   background: var(--surface);
   text-align: left;
 }
@@ -259,33 +274,39 @@
 .player-card-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
 }
 
 .player-card-header h2 {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .player-status {
   display: flex;
   flex: 0 0 auto;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
 }
 
-.out-badge,
-.busted-badge,
-.frozen-badge,
-.flip-seven-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
+.status-pill {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 36px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   border-radius: 999px;
-  padding: 0 10px;
-  font-size: 12px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 850;
+  line-height: 1;
   letter-spacing: 0;
+  text-align: center;
   text-transform: none;
+  white-space: nowrap;
 }
 
 .out-badge {
@@ -308,25 +329,16 @@
   background: var(--flip-seven-badge-bg);
 }
 
-.player-card-header strong {
-  display: grid;
-  place-items: center;
-  min-width: 64px;
-  height: 36px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 0 12px;
+.points-badge {
   color: var(--text-h);
   background: var(--counter-bg);
-  font-size: 14px;
-  white-space: nowrap;
 }
 
 .card-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -372,13 +384,16 @@
 }
 
 .empty-state {
-  margin-top: 18px;
+  margin-top: 20px;
   color: var(--muted);
   font-style: italic;
 }
 
 @media (max-width: 760px) {
   .app-shell {
+    --panel-padding: 20px;
+    --section-gap: 14px;
+
     width: min(100% - 20px, 1180px);
     padding: 20px 0;
   }
@@ -401,5 +416,19 @@
 
   .header-actions {
     flex-wrap: wrap;
+  }
+
+  .turn-actions {
+    flex-wrap: wrap;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .danger-button {
+    width: 128px;
+  }
+
+  .player-card-header {
+    gap: 12px;
   }
 }

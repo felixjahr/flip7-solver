@@ -48,12 +48,14 @@ function PlayerCard({ isActive, player }: PlayerCardProps) {
     >
       <div className="player-card-header">
         <div>
-          <span>Player {player.id}</span>
+          <span className="player-seat-label">Player {player.id}</span>
           <h2>{player.name}</h2>
         </div>
         <div className="player-status">
           <PlayerStatus player={player} />
-          <strong aria-label={`${points} points`}>{points} pts</strong>
+          <strong className="status-pill points-badge" aria-label={`${points} points`}>
+            {points} pts
+          </strong>
         </div>
       </div>
 
@@ -72,14 +74,16 @@ function PlayerCard({ isActive, player }: PlayerCardProps) {
 
 function PlayerStatus({ player }: { player: Player }) {
   if (player.isFlipSeven) {
-    return <span className="flip-seven-badge">Flip 7</span>
+    return <span className="status-pill flip-seven-badge">Flip 7</span>
   }
 
   return (
     <>
-      {player.isOut && <span className="out-badge">Out</span>}
-      {player.isBusted && <span className="busted-badge">Bust</span>}
-      {player.isFrozen && <span className="frozen-badge">Frozen</span>}
+      {player.isOut && <span className="status-pill out-badge">Out</span>}
+      {player.isBusted && <span className="status-pill busted-badge">Bust</span>}
+      {player.isFrozen && (
+        <span className="status-pill frozen-badge">Frozen</span>
+      )}
     </>
   )
 }
