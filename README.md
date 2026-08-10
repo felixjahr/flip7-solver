@@ -16,8 +16,6 @@ The main purpose of the project is the solver: a TypeScript rules and expected-v
 - **Recommendation logic** compares draw EV against the active player's current points and recommends drawing or quitting.
 - **Reusable solver entry points** live outside the UI so the strategy engine can grow independently from the interface.
 
-The current expected-value calculation intentionally excludes action cards. That keeps the first version explainable and focused on the core scoring math while leaving a clear path for deeper modeling of Freeze, Flip Three, and Second Chance outcomes.
-
 ## Probability Model
 
 ```text
