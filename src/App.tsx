@@ -37,6 +37,7 @@ function App() {
   )
   const [players, setPlayers] = useState<Player[] | null>(null)
   const [activePlayerIndex, setActivePlayerIndex] = useState(0)
+  const [roundStartPlayerIndex, setRoundStartPlayerIndex] = useState(0)
   const [selectedCardId, setSelectedCardId] = useState(cardOptions[0].id)
   const [selectedTargetId, setSelectedTargetId] = useState('')
   const [flipThreeDraw, setFlipThreeDraw] = useState<BoardState['flipThreeDraw']>(
@@ -147,6 +148,7 @@ function App() {
 
     setPlayers(playerNames.map(createPlayer))
     setActivePlayerIndex(0)
+    setRoundStartPlayerIndex(0)
     setSelectedTargetId('1')
     setFlipThreeDraw(null)
     setDiscardedCards([])
@@ -410,11 +412,13 @@ function App() {
       nextPlayers,
       nextDiscardedCards,
     )
+    const nextRoundStartPlayerIndex = (roundStartPlayerIndex + 1) % players.length
 
     setPlayers(nextPlayers)
-    setActivePlayerIndex(0)
+    setActivePlayerIndex(nextRoundStartPlayerIndex)
+    setRoundStartPlayerIndex(nextRoundStartPlayerIndex)
     setSelectedCardId(getNextAvailableCardId(deckState.usedCounts))
-    setSelectedTargetId(String(players[0]?.id ?? ''))
+    setSelectedTargetId(String(players[nextRoundStartPlayerIndex]?.id ?? ''))
     setFlipThreeDraw(null)
     setDiscardedCards(deckState.discardedCards)
   }
@@ -422,6 +426,7 @@ function App() {
   function resetGame() {
     setPlayers(null)
     setActivePlayerIndex(0)
+    setRoundStartPlayerIndex(0)
     setSelectedCardId(cardOptions[0].id)
     setSelectedTargetId('')
     setFlipThreeDraw(null)
