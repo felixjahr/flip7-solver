@@ -8,11 +8,11 @@ type TurnPanelProps = {
   activePlayer?: Player
   availableActionTargets: Player[]
   canAddSelectedCard: boolean
-  isFreezeSelected: boolean
   isResolvingFlipThree: boolean
   isRoundComplete: boolean
   needsActionTarget: boolean
   selectedCardId: string
+  targetLabel: string
   usedCardCounts: Record<string, number>
   onAddCard: (event: FormEvent<HTMLFormElement>) => void
   onQuitRound: () => void
@@ -25,11 +25,11 @@ export function TurnPanel({
   activePlayer,
   availableActionTargets,
   canAddSelectedCard,
-  isFreezeSelected,
   isResolvingFlipThree,
   isRoundComplete,
   needsActionTarget,
   selectedCardId,
+  targetLabel,
   usedCardCounts,
   onAddCard,
   onQuitRound,
@@ -80,7 +80,7 @@ export function TurnPanel({
 
         {needsActionTarget && (
           <label className="field">
-            <span>{isFreezeSelected ? 'Freeze player' : 'Flip Three target'}</span>
+            <span>{targetLabel}</span>
             <select
               disabled={isRoundComplete || availableActionTargets.length === 0}
               value={actionTargetId}

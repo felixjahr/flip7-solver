@@ -53,6 +53,12 @@ export function isPlayerInactive(player: Player) {
   return player.isOut || player.isBusted || player.isFrozen || player.isFlipSeven
 }
 
+export function hasUnusedSecondChance(player: Player) {
+  return player.cards.some(
+    (card) => card.label === 'Second Chance' && !card.isUsed,
+  )
+}
+
 export function getNextActivePlayerIndex(players: Player[], currentIndex: number) {
   if (players.every((player) => isPlayerInactive(player))) {
     return currentIndex

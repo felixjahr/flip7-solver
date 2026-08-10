@@ -18,6 +18,7 @@ import {
   getRemainingCardTotal,
   getRemainingCount,
   getUsedCardCounts,
+  hasUnusedSecondChance,
   isPlayerInactive,
   recycleDiscardIfDrawPileEmpty,
   resetPlayerForRound,
@@ -26,7 +27,6 @@ import {
 import {
   calculateBustPercentage,
   calculateDrawExpectedValue,
-  calculateQuitExpectedValue,
 } from './game/solver'
 import type { BoardState, CardOption, DeferredAction, Player } from './game/types'
 
@@ -71,13 +71,32 @@ function App() {
   const isResolvingFlipThree = flipThreeDraw !== null
   const isFreezeSelected = selectedCard.label === 'Freeze'
   const isFlipThreeSelected = selectedCard.label === 'Flip Three'
-  const needsActionTarget = isFreezeSelected || isFlipThreeSelected
-  const availableActionTargets =
-    players?.filter((player) => !isPlayerInactive(player)) ?? []
+  const isSecondChanceSelected = selectedCard.label === 'Second Chance'
+  const receivingPlayerIndex = flipThreeDraw?.targetPlayerIndex ?? activePlayerIndex
+  const receivingPlayer = players?.[receivingPlayerIndex]
+  const mustRedirectSecondChance = Boolean(
+    isSecondChanceSelected &&
+      receivingPlayer &&
+      hasUnusedSecondChance(receivingPlayer),
+  )
+  const availableActionTargets = getAvailableActionTargets(
+    players,
+    mustRedirectSecondChance,
+    receivingPlayerIndex,
+  )
+  const needsActionTarget =
+    isFreezeSelected ||
+    isFlipThreeSelected ||
+    (mustRedirectSecondChance && availableActionTargets.length > 0)
   const actionTargetId = resolveActionTargetId(
     selectedTargetId,
     availableActionTargets,
   )
+  const actionTargetLabel = isFreezeSelected
+    ? 'Freeze player'
+    : isFlipThreeSelected
+      ? 'Flip Three target'
+      : 'Second Chance target'
   const activePlayersRemaining =
     players?.filter((player) => !isPlayerInactive(player)).length ?? 0
   const isDeckEmpty = remainingDeckCount === 0
@@ -96,9 +115,9 @@ function App() {
   const drawExpectedValue = boardState
     ? calculateDrawExpectedValue(boardState)
     : 0
-  const quitExpectedValue = boardState
-    ? calculateQuitExpectedValue(boardState)
-    : 0
+  const currentPoints = activePlayer ? getPlayerPoints(activePlayer) : 0
+  const drawValueDelta = drawExpectedValue - currentPoints
+  const recommendedAction = drawExpectedValue > currentPoints ? 'Draw' : 'Quit'
   const bustPercentage = boardState ? calculateBustPercentage(boardState) : 0
 
   function updatePlayerCount(count: number) {
@@ -160,15 +179,18 @@ function App() {
       actionTargetIndex,
     )
     const nextPlayers = resolveFlipSeven(
-      players.map((player, index) => {
-        if (index !== flipThreeDraw.targetPlayerIndex) {
-          return player
-        }
+      redirectSecondChanceIfNeeded(
+        players.map((player, index) => {
+          if (index !== flipThreeDraw.targetPlayerIndex) {
+            return player
+          }
 
-        const result = applyCardToPlayer(player, selectedCard)
-        discardedCard = result.discardedCard
-        return result.player
-      }),
+          const result = applySelectedCardToPlayer(player, index)
+          discardedCard = result.discardedCard
+          return result.player
+        }),
+        flipThreeDraw.targetPlayerIndex,
+      ),
     )
     const updatedTargetPlayer = nextPlayers[flipThreeDraw.targetPlayerIndex]
     const nextCardsRemaining = flipThreeDraw.cardsRemaining - 1
@@ -219,24 +241,27 @@ function App() {
     let discardedCard: CardOption | undefined
     const actionTargetIndex = getActionTargetIndex(players, actionTargetId)
     const nextPlayers = resolveFlipSeven(
-      players.map((player, index) => {
-        if (index === activePlayerIndex) {
-          const result = applyCardToPlayer(player, selectedCard)
-          discardedCard = result.discardedCard
+      redirectSecondChanceIfNeeded(
+        players.map((player, index) => {
+          if (index === activePlayerIndex) {
+            const result = applySelectedCardToPlayer(player, index)
+            discardedCard = result.discardedCard
 
-          return {
-            ...result.player,
-            isFrozen:
-              isFreezeSelected && index === actionTargetIndex
-                ? true
-                : player.isFrozen,
+            return {
+              ...result.player,
+              isFrozen:
+                isFreezeSelected && index === actionTargetIndex
+                  ? true
+                  : player.isFrozen,
+            }
           }
-        }
 
-        return isFreezeSelected && index === actionTargetIndex
-          ? { ...player, isFrozen: true }
-          : player
-      }),
+          return isFreezeSelected && index === actionTargetIndex
+            ? { ...player, isFrozen: true }
+            : player
+        }),
+        activePlayerIndex,
+      ),
     )
     const deckState = updateDeckAfterDraw(nextPlayers, discardedCard)
 
@@ -282,6 +307,66 @@ function App() {
     }
 
     return pendingActions
+  }
+
+  function applySelectedCardToPlayer(player: Player, playerIndex: number) {
+    if (
+      selectedCard.label !== 'Second Chance' ||
+      !hasUnusedSecondChance(player)
+    ) {
+      return applyCardToPlayer(player, selectedCard)
+    }
+
+    if (getSecondChanceRedirectTargetIndex(playerIndex) < 0) {
+      return {
+        player,
+        discardedCard: selectedCard,
+      }
+    }
+
+    return {
+      player,
+    }
+  }
+
+  function redirectSecondChanceIfNeeded(
+    nextPlayers: Player[],
+    recipientIndex: number,
+  ) {
+    const targetIndex = getSecondChanceRedirectTargetIndex(recipientIndex)
+
+    if (targetIndex < 0) {
+      return nextPlayers
+    }
+
+    return nextPlayers.map((player, index) =>
+      index === targetIndex
+        ? { ...player, cards: [...player.cards, selectedCard] }
+        : player,
+    )
+  }
+
+  function getSecondChanceRedirectTargetIndex(recipientIndex: number) {
+    if (
+      selectedCard.label !== 'Second Chance' ||
+      !players ||
+      !hasUnusedSecondChance(players[recipientIndex])
+    ) {
+      return -1
+    }
+
+    const targetIndex = getActionTargetIndex(players, actionTargetId)
+
+    if (
+      targetIndex < 0 ||
+      targetIndex === recipientIndex ||
+      isPlayerInactive(players[targetIndex]) ||
+      hasUnusedSecondChance(players[targetIndex])
+    ) {
+      return -1
+    }
+
+    return targetIndex
   }
 
   function updateDeckAfterDraw(
@@ -373,18 +458,19 @@ function App() {
       <Scoreboard players={players} remainingDeckCount={remainingDeckCount} />
       <EvPanel
         bustPercentage={bustPercentage}
+        drawValueDelta={drawValueDelta}
         drawExpectedValue={drawExpectedValue}
-        quitExpectedValue={quitExpectedValue}
+        recommendedAction={recommendedAction}
       />
       <TurnPanel
         actionTargetId={actionTargetId}
         activePlayer={activePlayer}
         availableActionTargets={availableActionTargets}
         canAddSelectedCard={canAddSelectedCard}
-        isFreezeSelected={isFreezeSelected}
         isResolvingFlipThree={isResolvingFlipThree}
         isRoundComplete={isRoundComplete}
         needsActionTarget={needsActionTarget}
+        targetLabel={actionTargetLabel}
         selectedCardId={selectedCardId}
         usedCardCounts={usedCardCounts}
         onAddCard={addCardToActivePlayer}
@@ -409,6 +495,23 @@ function resolveActionTargetId(selectedTargetId: string, targets: Player[]) {
 
 function getActionTargetIndex(players: Player[], actionTargetId: string) {
   return players.findIndex((player) => String(player.id) === actionTargetId)
+}
+
+function getAvailableActionTargets(
+  players: Player[] | null,
+  isRedirectingSecondChance: boolean,
+  receivingPlayerIndex: number,
+) {
+  const activePlayers = players?.filter((player) => !isPlayerInactive(player)) ?? []
+
+  if (!isRedirectingSecondChance) {
+    return activePlayers
+  }
+
+  return activePlayers.filter(
+    (player) =>
+      player.id !== receivingPlayerIndex + 1 && !hasUnusedSecondChance(player),
+  )
 }
 
 export default App

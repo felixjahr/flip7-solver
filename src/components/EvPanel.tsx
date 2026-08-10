@@ -1,23 +1,32 @@
 type EvPanelProps = {
   bustPercentage: number
   drawExpectedValue: number
-  quitExpectedValue: number
+  drawValueDelta: number
+  recommendedAction: 'Draw' | 'Quit'
 }
 
 export function EvPanel({
   bustPercentage,
   drawExpectedValue,
-  quitExpectedValue,
+  drawValueDelta,
+  recommendedAction,
 }: EvPanelProps) {
+  const formattedDelta =
+    drawValueDelta >= 0
+      ? `+${drawValueDelta.toFixed(1)}`
+      : drawValueDelta.toFixed(1)
+
   return (
     <section className="ev-panel" aria-label="Expected values">
       <div>
         <span className="turn-label">Draw EV</span>
-        <strong>{drawExpectedValue.toFixed(1)}</strong>
+        <strong>
+          {drawExpectedValue.toFixed(1)} ({formattedDelta})
+        </strong>
       </div>
       <div>
-        <span className="turn-label">Quit EV</span>
-        <strong>{quitExpectedValue.toFixed(1)}</strong>
+        <span className="turn-label">Recommended</span>
+        <strong>{recommendedAction}</strong>
       </div>
       <div>
         <span className="turn-label">Bust risk</span>
