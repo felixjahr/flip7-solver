@@ -5,7 +5,7 @@ Flip7 Solver is a probability-focused strategy assistant for Flip 7. It tracks t
 The main purpose of the project is the solver: a TypeScript rules and expected-value engine that can reason about the active player, their current cards, the remaining deck, bust risk, and score outcomes. The React interface exists to make that board state easy to enter and inspect during a real game.
 
 <p>
-  <a href="https://flip7solver.felixjahr.com">Live Website</a>
+  <a href="https://flip7solver.felixjahr.com">Website</a>
 </p>
 
 ## Solver
